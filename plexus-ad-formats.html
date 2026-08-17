@@ -1,0 +1,1240 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plexus AdStream</title>
+
+    <!-- Video.js CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/video.js@8/dist/video-js.min.css" rel="stylesheet" />
+
+    <!-- Google Fonts: DM Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet" />
+
+    <!-- Google Publisher Tag (GPT) -->
+    <script async src="https://securepubads.g.doubleclick.net/tag/js/gpt.js"></script>
+    <script>
+        window.googletag = window.googletag || { cmd: [] };
+        googletag.cmd.push(function () {
+            googletag.pubads().disableInitialLoad();
+        });
+    </script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #0d0d12;
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 32px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .page-header {
+            text-align: center;
+        }
+
+        .page-header h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .page-header p {
+            margin-top: 6px;
+            font-size: 0.85rem;
+            color: #888;
+        }
+
+        .badge {
+            background: #1a73e8;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            display: inline-block;
+            vertical-align: middle;
+            margin-left: 10px;
+            white-space: nowrap;
+        }
+
+        .badge-purple {
+            background: #9b59b6;
+        }
+
+        .fmt-card h3 .badge {
+            margin-left: 0;
+            margin-top: 4px;
+        }
+
+        /* ── Painel de Configuração ── */
+        .config-panel {
+            width: 100%;
+            max-width: 900px;
+            background: #161620;
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 14px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        h2 {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #aaa;
+            margin-bottom: 12px;
+            border-left: 3px solid #1a73e8;
+            padding-left: 8px;
+        }
+
+        .format-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+        }
+
+        .fmt-card {
+            background: #1e1e2a;
+            border: 1px solid #2a2a35;
+            border-radius: 10px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .fmt-card:hover {
+            border-color: #555;
+            background: #232332;
+        }
+
+        .fmt-card.active {
+            border-color: #f9ab00;
+            background: rgba(249, 171, 0, 0.1);
+        }
+
+        .fmt-card.active h3 {
+            color: #f9ab00;
+        }
+
+        .fmt-card h3 {
+            font-size: 0.95rem;
+            color: #ddd;
+            margin-bottom: 6px;
+            line-height: 1.4;
+        }
+
+        .fmt-card p {
+            font-size: 0.75rem;
+            color: #777;
+            line-height: 1.3;
+        }
+
+        /* ── Inputs ── */
+        .row-group {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 10px;
+            padding: 16px;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .input-row input,
+        .input-row select {
+            flex: 1;
+            padding: 10px 14px;
+            background: #1e1e2a;
+            border: 1px solid #2a2a35;
+            border-radius: 8px;
+            color: #ddd;
+            font-family: monospace;
+            font-size: 0.85rem;
+            min-width: 200px;
+        }
+
+        .input-row input:focus {
+            outline: none;
+            border-color: #1a73e8;
+        }
+
+        .input-row select[disabled] {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            cursor: default;
+            opacity: 1;
+            color: #ddd;
+        }
+
+        .btn-primary {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #1a73e8, #0d47a1);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            width: 100%;
+            max-width: 300px;
+            margin: 0 auto;
+            display: block;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+        }
+
+        /* ── Área do Player e Layouts ── */
+        .stage-wrapper {
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            justify-content: center;
+            background: #000;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+            position: relative;
+            aspect-ratio: 16 / 9;
+        }
+        .stage-wrapper:fullscreen {
+            max-width: none;
+            width: 100vw;
+            height: 100vh;
+            aspect-ratio: auto;
+            border-radius: 0;
+            box-shadow: none;
+        }
+
+        #player-container {
+            width: 100%;
+            height: 100%;
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 2;
+        }
+
+        .ad-space-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #fff;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.4s;
+            background-size: cover;
+            background-position: center;
+        }
+
+        /* Layout 1: L-Bar */
+        .layout-l-bar #player-container {
+            width: 75%;
+            height: 75%;
+            top: 0;
+            left: 25%;
+            box-shadow: -5px 5px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .layout-l-bar .ad-space-background {
+            opacity: 1;
+            align-items: flex-end;
+            justify-content: flex-start;
+            padding: 20px;
+        }
+
+        /* Layout 2: Double Box */
+        .layout-double-box #player-container {
+            width: 50%;
+            height: 60%;
+            top: 20%;
+            left: 5%;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+        }
+
+        .layout-double-box .ad-space-background {
+            opacity: 1;
+            justify-content: flex-end;
+            padding-right: 10%;
+        }
+
+        /* Layout 3: Pause Ad Split-Screen */
+        .layout-pause-split #player-container {
+            width: 50%;
+            height: 50%;
+            top: 25%;
+            left: 4%;
+            border: 2px solid #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.8);
+            z-index: 11;
+            overflow: hidden;
+        }
+
+        .layout-pause-split .video-js .vjs-tech {
+            object-fit: cover;
+        }
+
+        #pause-split-ui {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            background: #0f1115;
+        }
+        #pause-split-ui.ad-visible {
+            animation: fadeIn 0.25s ease;
+        }
+
+        .split-right-pane {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 44%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            padding-right: 4%;
+            padding-left: 2%;
+        }
+
+        .dismiss-btn {
+            margin-top: 20px;
+            padding: 10px 24px;
+            background: #2a2d34;
+            color: #fff;
+            border: none;
+            border-radius: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .dismiss-btn:hover {
+            background: #3f434d;
+        }
+
+        /* Layout: Pause Ad Overlay */
+        #pause-ad-overlay {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(2px);
+            z-index: 10;
+            align-items: center;
+            justify-content: center;
+        }
+        #pause-ad-overlay.ad-visible {
+            animation: fadeIn 0.25s ease;
+        }
+
+        .pause-ad-card {
+            background: #fff;
+            padding: 10px;
+            border-radius: 8px;
+            max-width: 90%;
+            min-width: 320px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .resume-btn {
+            margin-top: 10px;
+            padding: 10px 20px;
+            background: #000;
+            color: #fff;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+
+        /* Layout: Pause Ad Overlay Lateral */
+        #pause-ad-overlay-side {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            align-items: center;
+            justify-content: flex-end;
+            background: rgba(0, 0, 0, 0.35);
+            backdrop-filter: blur(2px);
+            pointer-events: none;
+        }
+        #pause-ad-overlay-side.ad-visible {
+            animation: fadeIn 0.25s ease;
+        }
+
+        .pause-ad-side-card {
+            pointer-events: auto;
+            width: 300px;
+            margin-right: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        .side-card-close-btn {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.75);
+            color: #fff;
+            border: none;
+            font-size: 0.85rem;
+            cursor: pointer;
+            z-index: 14;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .side-card-close-btn:hover {
+            background: rgba(0, 0, 0, 0.95);
+        }
+
+        .resume-btn:hover {
+            background: #333;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.97); }
+            to   { opacity: 1; transform: scale(1); }
+        }
+
+        .video-js {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        /* ── Navbar / Topbar ── */
+        .topbar {
+            width: 100%;
+            max-width: 960px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 4px;
+        }
+        .plexus-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+        .plexus-brand img {
+            height: 32px;
+            width: auto;
+        }
+        .plexus-brand span {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: 0.5px;
+        }
+        .topbar-title {
+            font-size: 0.8rem;
+            color: #888;
+            text-align: right;
+        }
+        .topbar-title strong { color: #ccc; display: block; font-size: 0.95rem; }
+
+        /* ── Carrossel de Formatos ── */
+        .format-carousel-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+        }
+        .format-carousel {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+            padding-bottom: 6px;
+            flex: 1;
+            scrollbar-width: thin;
+            scrollbar-color: #2a2a35 transparent;
+        }
+        .format-carousel::-webkit-scrollbar { height: 4px; }
+        .format-carousel::-webkit-scrollbar-thumb { background: #2a2a35; border-radius: 4px; }
+        .format-carousel .fmt-card {
+            min-width: 160px;
+            flex-shrink: 0;
+        }
+        .carousel-arrow {
+            background: #1e1e2a;
+            border: 1px solid #2a2a35;
+            color: #aaa;
+            border-radius: 6px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 1rem;
+            flex-shrink: 0;
+            transition: background 0.2s;
+        }
+        .carousel-arrow:hover { background: #2a2a40; color: #fff; }
+
+        /* ── Layout Background ── */
+        .layout-pip #player-container {
+            width: 42%;
+            height: 42%;
+            bottom: 24px;
+            left: 38px;
+            top: auto;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.9);
+            z-index: 11;
+            overflow: hidden;
+        }
+        #pip-bg {
+            display: none;
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 9;
+            background: #0f1115;
+            align-items: center;
+            justify-content: center;
+        }
+        #pip-bg.ad-visible {
+            animation: fadeIn 0.25s ease;
+        }
+        #pip-ad-container {
+            width: 100%; height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        #ad-slot-pip {
+            width: 100%;
+            height: 100%;
+            min-height: 1px;
+        }
+       
+        #ad-slot-pip > div,
+        #ad-slot-pip > div > iframe {
+            width: 100% !important;
+            height: 100% !important;
+        }
+        /* Selo "Publicidade" */
+        .ad-disclosure-label {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            z-index: 13;
+            font-size: 10px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            color: #fff;
+            background: rgba(0, 0, 0, 0.55);
+            padding: 3px 8px;
+            border-radius: 4px;
+            pointer-events: none;
+        }
+        #pause-split-ui .ad-disclosure-label {
+            left: auto;
+            right: 12px;
+        }
+
+        #simulation-controls {
+            display: none;
+            width: 100%;
+            max-width: 900px;
+            background: #2a2a35;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .sim-btn {
+            padding: 8px 16px;
+            background: #f9ab00;
+            border: none;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        #ad-slot-pause,
+        #ad-slot-pause-overlay-side,
+        #ad-slot-pause-split,
+        #ad-slot-pip {
+            width: 100%;
+            min-height: 1px;
+        }
+
+        /* ── Console de Eventos (GAM & Player Logs) ── */
+        .log-panel {
+            width: 100%;
+            max-width: 900px;
+            background: #161620;
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 14px;
+            padding: 20px 24px;
+        }
+        .log-panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .log-panel-title {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #aaa;
+            border-left: 3px solid #1a73e8;
+            padding-left: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .log-adunit-chip {
+            font-family: monospace;
+            font-size: 0.72rem;
+            color: #9ecbff;
+            background: rgba(26, 115, 232, 0.12);
+            border: 1px solid rgba(26, 115, 232, 0.3);
+            padding: 3px 10px;
+            border-radius: 6px;
+        }
+        .log-clear-btn {
+            background: #1e1e2a;
+            border: 1px solid #2a2a35;
+            color: #aaa;
+            border-radius: 6px;
+            padding: 6px 14px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            transition: background 0.2s;
+        }
+        .log-clear-btn:hover { background: #2a2a40; color: #fff; }
+        .log-console {
+            background: #04060a;
+            border: 1px solid #2a2a35;
+            border-radius: 8px;
+            padding: 14px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.78rem;
+            height: 200px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            scrollbar-width: thin;
+            scrollbar-color: #2a2a35 transparent;
+        }
+        .log-console::-webkit-scrollbar { width: 6px; }
+        .log-console::-webkit-scrollbar-thumb { background: #2a2a35; border-radius: 4px; }
+        .log-entry {
+            display: flex;
+            gap: 12px;
+            line-height: 1.4;
+        }
+        .log-time {
+            color: #555;
+            flex-shrink: 0;
+        }
+        .log-msg { color: #cbd5e1; }
+        .log-msg.info { color: #4fc3f7; }
+        .log-msg.success { color: #4ade80; }
+        .log-msg.ad { color: #f9ab00; }
+        .log-msg.warn { color: #f87171; }
+    </style>
+</head>
+
+<body>
+
+    <div class="topbar">
+        <a class="plexus-brand" href="#">
+            <img src="plexus-logo.png" alt="Plexus logo" />
+            <span>Plexus</span>
+        </a>
+        <div class="topbar-title">
+            <strong>+SBT: Novos Formatos</strong>
+            <span class="badge">Live &amp; VOD</span>
+        </div>
+    </div>
+
+    <!-- Área de exibição: player + camadas de anúncio -->
+    <div id="stage" class="stage-wrapper">
+        <div class="ad-space-background">
+            <div id="ad-slot-layout" style="display:none;"></div>
+        </div>
+
+        <!-- Experiência 1: Pause Ad Overlay Central -->
+        <div id="pause-ad-overlay" role="dialog" aria-label="Advertisement">
+            <div class="pause-ad-card">
+                <span style="display:block; font-size:10px; color:#666; margin-bottom:5px;">Publicidade</span>
+                <div id="ad-slot-pause"></div>
+                <button class="resume-btn" id="btn-resume-overlay">▶ Retomar Vídeo</button>
+            </div>
+        </div>
+
+        <!-- Experiência 1B: Pause Ad Overlay Lateral -->
+        <div id="pause-ad-overlay-side" role="dialog" aria-label="Advertisement">
+            <div class="pause-ad-side-card">
+                <button class="side-card-close-btn" id="btn-resume-overlay-side">✕</button>
+                <span class="ad-disclosure-label" style="position: static; margin-bottom: 6px;">Publicidade</span>
+                <div id="ad-slot-pause-overlay-side"></div>
+            </div>
+        </div>
+
+        <!-- Experiência 2: Pause Ad Split-Screen -->
+        <div id="pause-split-ui" role="dialog" aria-label="Advertisement">
+            <div class="split-right-pane">
+                <span class="ad-disclosure-label">Publicidade</span>
+                <div id="ad-slot-pause-split"
+                    style="width: 100%; display: flex; justify-content: center; align-items: center;"></div>
+                <button class="dismiss-btn" id="btn-dismiss-split">Voltar reprodução</button>
+            </div>
+        </div>
+
+        <!-- Experiência 3: Background -->
+        <div id="pip-bg" role="dialog" aria-label="Advertisement">
+            <span class="ad-disclosure-label">Publicidade</span>
+            <div id="pip-ad-container">
+                <div id="ad-slot-pip"></div>
+            </div>
+        </div>
+
+        <div id="player-container">
+            <video id="poc-player" class="video-js vjs-default-skin" controls preload="none"></video>
+        </div>
+    </div>
+
+    <!-- Controles de Simulação -->
+    <div id="simulation-controls">
+        <button id="btn-trigger-lbar" class="sim-btn" style="display:none;">Simular Entrada de L-Bar</button>
+        <button id="btn-trigger-double" class="sim-btn" style="display:none;">Simular Entrada de Double Box</button>
+    </div>
+
+    <!-- Console de Eventos: GAM & Player Logs -->
+    <div class="log-panel">
+        <div class="log-panel-header">
+            <div class="log-panel-title">
+                GAM &amp; Player Event Logs
+                <span class="log-adunit-chip" id="log-adunit-chip"></span>
+            </div>
+            <button class="log-clear-btn" id="btn-clear-logs">Limpar</button>
+        </div>
+        <div class="log-console" id="log-console"></div>
+    </div>
+
+    <!-- Painel de Configuração -->
+    <div class="config-panel">
+        <div>
+            <h2>1. Formato</h2>
+            <div class="format-carousel-wrapper">
+                <button class="carousel-arrow" id="carousel-prev">&#8249;</button>
+                <div class="format-carousel" id="format-carousel">
+                    <!-- Pause Ad Overlay Central -->
+                    <div class="fmt-card active" data-format="pause">
+                        <h3>Pause Ads<br>OVERLAY CENTRAL</h3>
+                        <p>Ao pausar, renderiza banner centralizado sobre o vídeo.</p>
+                    </div>
+                    <!-- Pause Ad Overlay Lateral -->
+                    <div class="fmt-card" data-format="pause-overlay-side">
+                        <h3>Pause Ads<br>OVERLAY LATERAL</h3>
+                        <p>Ao pausar, creative com fundo transparente aparece encostado à direita do vídeo.</p>
+                    </div>
+                    <!-- Pause Ad Split-Screen -->
+                    <div class="fmt-card" data-format="pause-split">
+                        <h3>Pause Ads<br>SPLIT-SCREEN</h3>
+                        <p>Ao pausar, vídeo encolhe à esquerda e o ad entra à direita.</p>
+                    </div>
+                    <!-- Background -->
+                    <div class="fmt-card" data-format="pip">
+                        <h3>Pause Ads<br>BACKGROUND</h3>
+                        <p>Ao pausar, o player vai para o canto e o ad cobre o fundo.</p>
+                    </div>
+                    <!-- L-Bar -->
+                    <div class="fmt-card" data-format="lbar">
+                        <h3>L-Bar<br><span class="badge badge-purple">In development</span></h3>
+                        <p>Reduz o vídeo e exibe display em L ao redor.</p>
+                    </div>
+                    <!-- Double Box -->
+                    <div class="fmt-card" data-format="doublebox">
+                        <h3>Double Box<br><span class="badge badge-purple">In development</span></h3>
+                        <p>Vídeo e Anúncio dividem a tela simultaneamente.</p>
+                    </div>
+                </div>
+                <button class="carousel-arrow" id="carousel-next">&#8250;</button>
+            </div>
+        </div>
+
+        <div class="row-group">
+            <h2>2. Fonte</h2>
+            <div class="input-row">
+                <select id="stream-type" style="flex: 0.35;" disabled>
+                    <option value="video/mp4" selected>VOD MP4</option>
+                </select>
+                <select id="stream-preset" style="flex: 0.65;"></select>
+            </div>
+            <div class="input-row" id="custom-url-row" style="margin-top: 10px; display: none;">
+                <input type="text" id="stream-url"
+                    value="https://storage.googleapis.com/nycolle-public/SBT/sabadou-sbt.mp4"
+                    placeholder="URL do VOD MP4" />
+            </div>
+        </div>
+
+        <div class="row-group">
+            <h2>3. Ambiente</h2>
+            <div class="input-row">
+                <select id="env-target" style="flex: 1;" disabled>
+                    <option value="web" selected>WEB (env=web)</option>
+                </select>
+            </div>
+        </div>
+
+        <button id="btn-start" class="btn-primary">▶ Iniciar Ambiente de Teste</button>
+    </div>
+
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/video.js@8/dist/video.min.js"></script>
+
+    <script>
+        let player = null;
+        let currentFormat = 'pause';
+        const stage = document.getElementById('stage');
+        const gptSlots = {};
+
+        // Ad Unit único do GAM utilizado por todos os formatos
+        const AD_UNIT_PATH = '/23163430111/pause_ad';
+
+        const FORMAT_LABELS = {
+            'pause': 'PAUSE AD OVERLAY CENTRAL',
+            'pause-overlay-side': 'PAUSE AD OVERLAY LATERAL',
+            'pause-split': 'PAUSE AD SPLIT-SCREEN',
+            'pip': 'PAUSE AD BACKGROUND',
+            'lbar': 'L-BAR',
+            'doublebox': 'DOUBLE BOX'
+        };
+
+        const SLOT_LABELS = {
+            'ad-slot-pause': 'PAUSE AD OVERLAY CENTRAL',
+            'ad-slot-pause-overlay-side': 'PAUSE AD OVERLAY LATERAL',
+            'ad-slot-pause-split': 'PAUSE AD SPLIT-SCREEN',
+            'ad-slot-pip': 'PAUSE AD BACKGROUND',
+            'ad-slot-layout': 'L-BAR / DOUBLE BOX'
+        };
+
+        const STREAM_PRESETS = {
+            'video/mp4': [
+                { label: 'Sabadou SBT (VOD)', url: 'https://storage.googleapis.com/nycolle-public/SBT/sabadou-sbt.mp4' },
+                { label: 'Big Buck Bunny (VOD)', url: 'https://storage.googleapis.com/plexus-siim-public/big-bunny.mp4' },
+                { label: 'Custom URL...', url: '' }
+            ]
+        };
+
+        const streamTypeSelect = document.getElementById('stream-type');
+        const streamPresetSelect = document.getElementById('stream-preset');
+        const streamUrlInput = document.getElementById('stream-url');
+        const customUrlRow = document.getElementById('custom-url-row');
+
+        function populateStreamPresets() {
+            const presets = STREAM_PRESETS[streamTypeSelect.value] || [];
+            streamPresetSelect.innerHTML = '';
+            presets.forEach(function (preset) {
+                const option = document.createElement('option');
+                option.value = preset.url;
+                option.textContent = preset.label;
+                streamPresetSelect.appendChild(option);
+            });
+            applyStreamPreset();
+        }
+
+        function applyStreamPreset() {
+            const isCustom = streamPresetSelect.value === '';
+            customUrlRow.style.display = isCustom ? 'flex' : 'none';
+            if (!isCustom) streamUrlInput.value = streamPresetSelect.value;
+        }
+
+        streamTypeSelect.addEventListener('change', populateStreamPresets);
+        streamPresetSelect.addEventListener('change', applyStreamPreset);
+        populateStreamPresets();
+
+        // ── Console de Eventos ──
+        const logConsole = document.getElementById('log-console');
+
+        function logEvent(msg, type) {
+            type = type || 'info';
+            const timeStr = new Date().toTimeString().substring(0, 8);
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            const time = document.createElement('span');
+            time.className = 'log-time';
+            time.textContent = '[' + timeStr + ']';
+            const text = document.createElement('span');
+            text.className = 'log-msg ' + type;
+            text.textContent = msg;
+            entry.appendChild(time);
+            entry.appendChild(text);
+            logConsole.appendChild(entry);
+            logConsole.scrollTop = logConsole.scrollHeight;
+        }
+
+        document.getElementById('log-adunit-chip').textContent = 'Ad Unit: ' + AD_UNIT_PATH;
+        document.getElementById('btn-clear-logs').addEventListener('click', function () {
+            logConsole.innerHTML = '';
+            logEvent('Log console cleared.', 'info');
+        });
+
+        logEvent('Plexus Player Engine Initialized.', 'info');
+        logEvent('Active Ad Unit: ' + AD_UNIT_PATH, 'info');
+
+        const adRequestStartTime = {};
+
+        function elapsedSinceRequest(slotId) {
+            return adRequestStartTime[slotId] ? Math.round(performance.now() - adRequestStartTime[slotId]) : null;
+        }
+
+        function formatDelay(slotId) {
+            const elapsed = elapsedSinceRequest(slotId);
+            return elapsed !== null ? ' | +' + elapsed + 'ms since request' : '';
+        }
+
+        googletag.cmd.push(function () {
+            googletag.pubads().addEventListener('slotResponseReceived', function (event) {
+                const slotId = event.slot.getSlotElementId();
+                const label = SLOT_LABELS[slotId] || slotId;
+                logEvent('GAM Response Received: ' + label + formatDelay(slotId), 'info');
+            });
+
+            googletag.pubads().addEventListener('slotRenderEnded', function (event) {
+                const slotId = event.slot.getSlotElementId();
+                const label = SLOT_LABELS[slotId] || slotId;
+                const delayStr = formatDelay(slotId);
+                if (event.isEmpty) {
+                    logEvent('No Ad Returned (No Fill): ' + label + delayStr, 'warn');
+                    delete adRequestStartTime[slotId];
+                } else {
+                    logEvent('Ad Rendered: ' + label + ' | Creative ID: ' + event.creativeId + ' | Line Item ID: ' + event.lineItemId + delayStr, 'success');
+                    applyAdLayout(slotId);
+                }
+            });
+
+            googletag.pubads().addEventListener('slotOnload', function (event) {
+                const slotId = event.slot.getSlotElementId();
+                const label = SLOT_LABELS[slotId] || slotId;
+                logEvent('Ad Fully Loaded: ' + label + formatDelay(slotId), 'success');
+                delete adRequestStartTime[slotId];
+            });
+        });
+
+        // Seleção de Formato UI
+        document.querySelectorAll('.fmt-card').forEach(function (card) {
+            card.addEventListener('click', function () {
+                document.querySelectorAll('.fmt-card').forEach(c => c.classList.remove('active'));
+                this.classList.add('active');
+                currentFormat = this.dataset.format;
+                logEvent('Ad Experience Selection Updated: ' + (FORMAT_LABELS[currentFormat] || currentFormat.toUpperCase()), 'info');
+            });
+        });
+
+        // Dispara a request ao GAM para um slot (clear + refresh)
+        function requestGAMAd(slotId) {
+            const slot = gptSlots[slotId];
+            if (!slot) return;
+            logEvent('Ad Requested: ' + (SLOT_LABELS[slotId] || slotId), 'ad');
+            adRequestStartTime[slotId] = performance.now();
+
+            googletag.cmd.push(function () {
+                // Key-values para targeting (+SBT):
+                // slot.setTargeting('program', '');
+                // slot.setTargeting('channel', '');
+                // slot.setTargeting('genre', '');
+                // slot.setTargeting('content_type', '');
+                // slot.setTargeting('device', '');
+                googletag.pubads().clear([slot]);
+                googletag.pubads().refresh([slot]);
+            });
+        }
+
+        // Aplica o layout do formato após confirmar que o ad veio
+        function applyAdLayout(slotId) {
+            if (player && !player.paused()) return;
+            const overlayMap = {
+                'ad-slot-pause': 'pause-ad-overlay',
+                'ad-slot-pause-overlay-side': 'pause-ad-overlay-side',
+                'ad-slot-pause-split': 'pause-split-ui',
+                'ad-slot-pip': 'pip-bg'
+            };
+            const elId = overlayMap[slotId];
+            if (!elId) return;
+            const el = document.getElementById(elId);
+            if (slotId === 'ad-slot-pause-split') stage.classList.add('layout-pause-split');
+            if (slotId === 'ad-slot-pip') stage.classList.add('layout-pip');
+            el.style.display = (slotId === 'ad-slot-pause-split') ? 'block' : 'flex';
+            el.classList.add('ad-visible');
+        }
+
+        // Reverte o layout ao estado normal (player fullscreen, sem overlays)
+        function revertAdLayout() {
+            const overlays = ['pause-ad-overlay', 'pause-ad-overlay-side', 'pause-split-ui', 'pip-bg'];
+            overlays.forEach(function (id) {
+                const el = document.getElementById(id);
+                el.style.display = 'none';
+                el.classList.remove('ad-visible');
+            });
+            stage.classList.remove('layout-pause-split');
+            stage.classList.remove('layout-pip');
+        }
+
+        // Botões de retomada do vídeo
+        document.getElementById('btn-resume-overlay').addEventListener('click', function () {
+            if (player) player.play();
+        });
+        document.getElementById('btn-resume-overlay-side').addEventListener('click', function () {
+            if (player) player.play();
+        });
+        document.getElementById('btn-dismiss-split').addEventListener('click', function () {
+            if (player) player.play();
+        });
+
+        // Gatilhos manuais dos formatos em desenvolvimento
+        document.getElementById('btn-trigger-lbar').addEventListener('click', function () {
+            const isActive = stage.classList.contains('layout-l-bar');
+            const adLayoutDiv = document.getElementById('ad-slot-layout');
+            if (isActive) {
+                stage.classList.remove('layout-l-bar');
+                adLayoutDiv.style.display = 'none';
+                logEvent('L-Bar Experience Ended — Player Restored', 'info');
+                this.textContent = 'Simular Entrada de L-Bar';
+            } else {
+                stage.classList.add('layout-l-bar');
+                adLayoutDiv.style.display = 'block';
+                logEvent('Manual Trigger: L-BAR Experience', 'ad');
+                requestGAMAd('ad-slot-layout');
+                this.textContent = 'Encerrar L-Bar (Retornar Fullscreen)';
+            }
+        });
+
+        document.getElementById('btn-trigger-double').addEventListener('click', function () {
+            const isActive = stage.classList.contains('layout-double-box');
+            const adLayoutDiv = document.getElementById('ad-slot-layout');
+            if (isActive) {
+                stage.classList.remove('layout-double-box');
+                adLayoutDiv.style.display = 'none';
+                logEvent('Double Box Experience Ended — Player Restored', 'info');
+                this.textContent = 'Simular Entrada de Double Box';
+            } else {
+                stage.classList.add('layout-double-box');
+                adLayoutDiv.style.display = 'block';
+                logEvent('Manual Trigger: DOUBLE BOX Experience', 'ad');
+                requestGAMAd('ad-slot-layout');
+                this.textContent = 'Encerrar Double Box (Retornar Fullscreen)';
+            }
+        });
+
+        // Inicialização do Player e do GAM
+        document.getElementById('btn-start').addEventListener('click', function () {
+            const url = document.getElementById('stream-url').value;
+            const type = document.getElementById('stream-type').value;
+            const envTargetValue = document.getElementById('env-target').value;
+
+            logEvent('Ad Experience Activated: ' + (FORMAT_LABELS[currentFormat] || currentFormat) + ' (env=' + envTargetValue + ')', 'info');
+
+            googletag.cmd.push(function () {
+                googletag.destroySlots();
+
+                document.getElementById('ad-slot-pause').innerHTML = '';
+                document.getElementById('ad-slot-pause-overlay-side').innerHTML = '';
+                document.getElementById('ad-slot-pause-split').innerHTML = '';
+                document.getElementById('ad-slot-pip').innerHTML = '';
+                document.getElementById('ad-slot-layout').innerHTML = '';
+
+                gptSlots['ad-slot-pause'] = googletag.defineSlot(AD_UNIT_PATH, [[300, 250], [336, 280], [728, 90], [970, 250], [300, 600], ['fluid']], 'ad-slot-pause')
+                    .setTargeting('env', envTargetValue)
+                    .setTargeting('pause_ad_type', 'overlay')
+                    .addService(googletag.pubads());
+
+                gptSlots['ad-slot-pause-overlay-side'] = googletag.defineSlot(AD_UNIT_PATH, [[300, 250], [336, 280], [300, 600], ['fluid']], 'ad-slot-pause-overlay-side')
+                    .setTargeting('env', envTargetValue)
+                    .setTargeting('pause_ad_type', 'jequiti')
+                    .addService(googletag.pubads());
+
+                gptSlots['ad-slot-pause-split'] = googletag.defineSlot(AD_UNIT_PATH, [[300, 250], [336, 280], [300, 600], ['fluid']], 'ad-slot-pause-split')
+                    .setTargeting('env', envTargetValue)
+                    .setTargeting('pause_ad_type', 'jequiti')
+                    .addService(googletag.pubads());
+
+                gptSlots['ad-slot-pip'] = googletag.defineSlot(AD_UNIT_PATH, [['fluid']], 'ad-slot-pip')
+                    .setTargeting('env', envTargetValue)
+                    .setTargeting('pause_ad_type', 'background')
+                    .addService(googletag.pubads());
+
+                gptSlots['ad-slot-layout'] = googletag.defineSlot(AD_UNIT_PATH, [[300, 250], [728, 90], [160, 600]], 'ad-slot-layout').addService(googletag.pubads());
+
+                googletag.enableServices();
+                googletag.display('ad-slot-pause');
+                googletag.display('ad-slot-pause-overlay-side');
+                googletag.display('ad-slot-pause-split');
+                googletag.display('ad-slot-pip');
+                googletag.display('ad-slot-layout');
+            });
+
+            // Reseta a interface gráfica
+            stage.className = 'stage-wrapper';
+            document.getElementById('pause-ad-overlay').style.display = 'none';
+            document.getElementById('pause-ad-overlay-side').style.display = 'none';
+            document.getElementById('pause-split-ui').style.display = 'none';
+            document.getElementById('pip-bg').style.display = 'none';
+            document.getElementById('ad-slot-layout').style.display = 'none';
+
+            const hasManualTrigger = currentFormat === 'lbar' || currentFormat === 'doublebox';
+            document.getElementById('simulation-controls').style.display = hasManualTrigger ? 'block' : 'none';
+            document.getElementById('btn-trigger-lbar').style.display = currentFormat === 'lbar' ? 'inline-block' : 'none';
+            document.getElementById('btn-trigger-double').style.display = currentFormat === 'doublebox' ? 'inline-block' : 'none';
+
+            if (player) {
+                player.dispose();
+                document.getElementById('player-container').innerHTML = '<video id="poc-player" class="video-js vjs-default-skin" controls preload="none"></video>';
+            }
+
+            player = videojs('poc-player', { controls: true, autoplay: true, preload: 'auto', fill: true });
+            // Fullscreen no stage (não no player) para que os overlays de ad apareçam
+            player.requestFullscreen = function () {
+                const fsEl = document.getElementById('stage');
+                if (fsEl.requestFullscreen) fsEl.requestFullscreen();
+                else if (fsEl.webkitRequestFullscreen) fsEl.webkitRequestFullscreen();
+                else if (fsEl.msRequestFullscreen) fsEl.msRequestFullscreen();
+            };
+            player.exitFullscreen = function () {
+                if (document.exitFullscreen) document.exitFullscreen();
+                else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+                else if (document.msExitFullscreen) document.msExitFullscreen();
+            };
+            player.isFullscreen = function () {
+                return !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
+            };
+            player.src({ src: url, type: type });
+
+            player.on('pause', function () {
+                if (player.seeking() || player.scrubbing()) return;
+                if (player.currentTime() >= player.duration() - 0.5) return;
+
+                logEvent('Video Paused — Triggering ' + (FORMAT_LABELS[currentFormat] || 'PAUSE AD'), 'ad');
+
+                if (currentFormat === 'pause') {
+                    requestGAMAd('ad-slot-pause');
+
+                } else if (currentFormat === 'pause-overlay-side') {
+                    requestGAMAd('ad-slot-pause-overlay-side');
+
+                } else if (currentFormat === 'pause-split') {
+                    requestGAMAd('ad-slot-pause-split');
+
+                } else if (currentFormat === 'pip') {
+                    requestGAMAd('ad-slot-pip');
+                }
+            });
+
+            let seekActive = false;
+            let seekResume = false;
+            let playbackStarted = false;
+            player.on('seeking', function () {
+                if (!seekActive) {
+                    seekActive = true;
+                    logEvent('Playback Seek', 'info');
+                }
+            });
+            player.on('seeked', function () {
+                seekActive = false;
+                seekResume = true;
+                setTimeout(function () { seekResume = false; }, 1000);
+            });
+
+            player.on('play', function () {
+                if (seekResume) {
+                    seekResume = false;
+                } else if (!playbackStarted) {
+                    playbackStarted = true;
+                    logEvent('Playback Started', 'success');
+                } else {
+                    logEvent('Playback Resumed', 'success');
+                }
+                revertAdLayout();
+
+                googletag.cmd.push(function () {
+                    if (gptSlots['ad-slot-pause']) googletag.pubads().clear([gptSlots['ad-slot-pause']]);
+                    if (gptSlots['ad-slot-pause-overlay-side']) googletag.pubads().clear([gptSlots['ad-slot-pause-overlay-side']]);
+                    if (gptSlots['ad-slot-pause-split']) googletag.pubads().clear([gptSlots['ad-slot-pause-split']]);
+                    if (gptSlots['ad-slot-pip']) googletag.pubads().clear([gptSlots['ad-slot-pip']]);
+                });
+            });
+        });
+
+        const carousel = document.getElementById('format-carousel');
+        document.getElementById('carousel-prev').addEventListener('click', function () {
+            carousel.scrollBy({ left: -200, behavior: 'smooth' });
+        });
+        document.getElementById('carousel-next').addEventListener('click', function () {
+            carousel.scrollBy({ left: 200, behavior: 'smooth' });
+        });
+
+        document.getElementById('btn-start').click();
+    </script>
+</body>
+
+</html>
